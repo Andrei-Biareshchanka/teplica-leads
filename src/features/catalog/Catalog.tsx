@@ -71,7 +71,7 @@ export function Catalog() {
               <div className={`h-40 bg-gradient-to-br ${item.color} flex items-center justify-center`}>
                 <span className="text-6xl">{item.emoji}</span>
               </div>
-              <div className="p-5 border border-gray-100 rounded-b-2xl">
+              <div className="p-5 border border-gray-100 rounded-b-2xl text-center">
                 <h3 className="font-bold text-gray-900 mb-2">{item.title}</h3>
                 <p className="text-gray-500 text-sm mb-3 leading-relaxed">{item.desc}</p>
                 <div className="text-[#2d7a3a] font-bold">{item.price}</div>

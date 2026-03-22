@@ -23,13 +23,13 @@ export function Advantages() {
           {ITEMS.map(({ Icon, title, desc }, i) => (
             <motion.div
               key={title}
-              className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
             >
-              <div className="w-12 h-12 bg-[#2d7a3a]/10 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-[#2d7a3a]/10 rounded-xl flex items-center justify-center mb-4 mx-auto">
                 <Icon className="text-[#2d7a3a]" size={24} />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>

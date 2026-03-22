@@ -49,14 +49,16 @@ export function Pricing() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
             >
-              {plan.highlighted && (
-                <div className="bg-white/20 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full inline-block mb-3">
-                  Популярный
-                </div>
-              )}
-              <div className={`text-sm mb-1 ${plan.highlighted ? 'text-green-200' : 'text-gray-500'}`}>{plan.desc}</div>
-              <div className={`text-2xl font-bold mb-1 ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>{plan.name}</div>
-              <div className={`text-3xl font-bold mb-6 ${plan.highlighted ? 'text-green-200' : 'text-[#2d7a3a]'}`}>{plan.price}</div>
+              <div className="text-center mb-6">
+                {plan.highlighted && (
+                  <div className="bg-white/20 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full inline-block mb-3">
+                    Популярный
+                  </div>
+                )}
+                <div className={`text-sm mb-1 ${plan.highlighted ? 'text-green-200' : 'text-gray-500'}`}>{plan.desc}</div>
+                <div className={`text-2xl font-bold mb-1 ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>{plan.name}</div>
+                <div className={`text-3xl font-bold ${plan.highlighted ? 'text-green-200' : 'text-[#2d7a3a]'}`}>{plan.price}</div>
+              </div>
 
               <ul className="space-y-2 mb-6">
                 {plan.features.map(f => (
