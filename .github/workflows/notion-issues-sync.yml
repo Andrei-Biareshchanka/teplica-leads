@@ -1,0 +1,119 @@
+name: Sync GitHub Issues → Notion
+
+on:
+  issues:
+    types: [opened, closed, reopened]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine priority from labels
+        id: priority
+        run: |
+          LABELS='${{ toJson(github.event.issue.labels) }}'
+          if echo "$LABELS" | grep -qi '"priority:high"'; then
+            echo "value=High" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -qi '"priority:low"'; then
+            echo "value=Low" >> $GITHUB_OUTPUT
+          else
+            echo "value=Medium" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Notion card (issue opened)
+        if: github.event.action == 'opened'
+        run: |
+          TITLE=$(echo '${{ github.event.issue.title }}' | tr -d '"\')
+          BODY=$(echo '${{ github.event.issue.body }}' | head -c 1900 | tr -d '"\' || echo "")
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          ISSUE_URL="${{ github.event.issue.html_url }}"
+          PRIORITY="${{ steps.priority.outputs.value }}"
+
+          curl -s -X POST "https://api.notion.com/v1/pages" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d "{
+              \"parent\": { \"database_id\": \"${{ secrets.NOTION_DATABASE_ID }}\" },
+              \"properties\": {
+                \"Task\": { \"title\": [{ \"text\": { \"content\": \"#${ISSUE_NUMBER} ${TITLE}\" } }] },
+                \"Description\": { \"rich_text\": [{ \"text\": { \"content\": \"${BODY}\" } }] },
+                \"Status\": { \"select\": { \"name\": \"Todo\" } },
+                \"Priority\": { \"select\": { \"name\": \"${PRIORITY}\" } },
+                \"GitHub Issue #\": { \"number\": ${ISSUE_NUMBER} },
+                \"GitHub Issue URL\": { \"url\": \"${ISSUE_URL}\" }
+              },
+              \"children\": [
+                {
+                  \"object\": \"block\",
+                  \"type\": \"heading_3\",
+                  \"heading_3\": { \"rich_text\": [{ \"text\": { \"content\": \"Подзадачи\" } }] }
+                },
+                {
+                  \"object\": \"block\",
+                  \"type\": \"to_do\",
+                  \"to_do\": { \"rich_text\": [{ \"text\": { \"content\": \"Реализовать задачу\" } }], \"checked\": false }
+                },
+                {
+                  \"object\": \"block\",
+                  \"type\": \"to_do\",
+                  \"to_do\": { \"rich_text\": [{ \"text\": { \"content\": \"Написать тест\" } }], \"checked\": false }
+                },
+                {
+                  \"object\": \"block\",
+                  \"type\": \"to_do\",
+                  \"to_do\": { \"rich_text\": [{ \"text\": { \"content\": \"Сделать code review\" } }], \"checked\": false }
+                },
+                {
+                  \"object\": \"block\",
+                  \"type\": \"to_do\",
+                  \"to_do\": { \"rich_text\": [{ \"text\": { \"content\": \"Задеплоить\" } }], \"checked\": false }
+                }
+              ]
+            }"
+
+      - name: Find Notion page by issue number
+        if: github.event.action == 'closed' || github.event.action == 'reopened'
+        id: find_page
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          RESPONSE=$(curl -s -X POST "https://api.notion.com/v1/databases/${{ secrets.NOTION_DATABASE_ID }}/query" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d "{
+              \"filter\": {
+                \"property\": \"GitHub Issue #\",
+                \"number\": { \"equals\": ${ISSUE_NUMBER} }
+              }
+            }")
+          PAGE_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; r=json.load(sys.stdin); print(r['results'][0]['id'] if r['results'] else '')" 2>/dev/null || echo "")
+          echo "page_id=$PAGE_ID" >> $GITHUB_OUTPUT
+
+      - name: Update Notion card → Done (issue closed)
+        if: github.event.action == 'closed' && steps.find_page.outputs.page_id != ''
+        run: |
+          curl -s -X PATCH "https://api.notion.com/v1/pages/${{ steps.find_page.outputs.page_id }}" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d "{
+              \"properties\": {
+                \"Status\": { \"select\": { \"name\": \"Done\" } },
+                \"Done\": { \"checkbox\": true }
+              }
+            }"
+
+      - name: Update Notion card → In Progress (issue reopened)
+        if: github.event.action == 'reopened' && steps.find_page.outputs.page_id != ''
+        run: |
+          curl -s -X PATCH "https://api.notion.com/v1/pages/${{ steps.find_page.outputs.page_id }}" \
+            -H "Authorization: Bearer ${{ secrets.NOTION_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -H "Notion-Version: 2022-06-28" \
+            -d "{
+              \"properties\": {
+                \"Status\": { \"select\": { \"name\": \"In Progress\" } },
+                \"Done\": { \"checkbox\": false }
+              }
+            }"
