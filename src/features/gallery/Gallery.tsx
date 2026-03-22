@@ -59,9 +59,9 @@ export function Gallery() {
                   </span>
                 </div>
               </div>
-              <div className="p-4 border border-gray-100 rounded-b-2xl">
+              <div className="p-4 border border-gray-100 rounded-b-2xl text-center">
                 <div className="font-bold text-gray-900">{project.title}</div>
-                <div className="flex gap-3 mt-1 text-sm text-gray-500">
+                <div className="flex gap-3 mt-1 text-sm text-gray-500 justify-center">
                   <span>{project.area}</span>
                   <span>·</span>
                   <span>{project.location}</span>
