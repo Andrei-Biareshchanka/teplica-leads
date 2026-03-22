@@ -56,13 +56,13 @@ export function Reviews() {
               exit={{ opacity: 0, x: -direction * 60 }}
               transition={{ duration: 0.35 }}
             >
-              <div className="flex gap-1 mb-6">
+              <div className="flex gap-1 mb-6 justify-center">
                 {Array.from({ length: review.rating }).map((_, i) => (
                   <Star key={i} size={20} className="text-yellow-400 fill-yellow-400" />
                 ))}
               </div>
-              <p className="text-gray-700 text-lg leading-relaxed mb-8">"{review.text}"</p>
-              <div>
+              <p className="text-gray-700 text-lg leading-relaxed mb-8 text-center">"{review.text}"</p>
+              <div className="text-center">
                 <div className="font-bold text-gray-900">{review.name}</div>
                 <div className="text-sm text-gray-500">{review.city} · {review.type}</div>
               </div>
